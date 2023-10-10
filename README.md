@@ -1,13 +1,12 @@
-# Checkpoint Policy Push by ChatGPT
+Apologies for the confusion. Here is the revised `README.md` in markdown format:
 
-https://chat.openai.com/share/a4cc9ad0-aabe-4abe-ac0e-cba2cf9929f8
+---
 
-
-## Policy Push Script Documentation
+# Policy Push Script Documentation
 
 This script automates the process of pushing policies to multiple targets using Check Point's Management API. It concurrently processes up to 5 policy pushes at a time, with a delay of 2 seconds between each push. The script generates an HTML report of the push results and sends it via email.
 
-### Dependencies
+## Dependencies
 
 Install the necessary libraries in your virtual environment:
 
@@ -15,10 +14,11 @@ Install the necessary libraries in your virtual environment:
 pip install cp-mgmt-api-sdk python-dotenv Jinja2 smtplib
 ```
 
-### Configuration Files
+## Configuration Files
 
 1. **`config.json`**:
    - Holds configuration for the Check Point Management server, logging, and email settings.
+
 ```json
 {
     "checkpoint": {
@@ -42,104 +42,138 @@ pip install cp-mgmt-api-sdk python-dotenv Jinja2 smtplib
 
 2. **`.env`**:
    - Stores the API token for authentication.
+
 ```plaintext
 API_TOKEN=your-api-token
 ```
 
-### HTML Report Template
+## HTML Report Template
 
-Create a directory named `templates` and within it, create a file named `report_template.html`:
+Create a directory named `templates` and within it, create a file named `report_template.html` with the necessary HTML content for the report.
 
-```html
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <style>
-        .success { color: green; }
-        .failure { color: red; }
-    </style>
-    <title>Policy Push Report</title>
-</head>
-<body>
-<table>
-    <tr>
-        <th>Policy Name</th>
-        <th>Target Name</th>
-        <th>Push Successful</th>
-        <th>Error Message</th>
-    </tr>
-    {% for result in data.policy_push_results %}
-    <tr class="{{ 'success' if result.success else 'failure' }}">
-        <td>{{ result.policy_name }}</td>
-        <td>{{ result.target_name }}</td>
-        <td>{{ result.success }}</td>
-        <td>{{ result.error_message }}</td>
-    </tr>
-    {% endfor %}
-</table>
-</body>
-</html>
-```
+## Python Script (`main.py`)
 
-### Python Script (`main.py`)
+The `main.py` script is the core of this project. It communicates with the Check Point Management server using the Check Point Management API, pushing policies to multiple targets. Here are the main sections of the script:
 
-The main script consists of multiple functions to handle logging, policy pushing, report generation, and email sending. The `main()` function orchestrates these tasks.
+### Importing Necessary Libraries
+
+The script begins by importing the necessary libraries such as `json`, `logging`, `os`, `dotenv`, `jinja2`, `smtplib`, `APIClient` from `cp_mgmt_api_sdk_py`, and others required for the script to function properly.
+
+### Loading Configuration and Setting Up Logging
+
+The script loads configurations from a `config.json` file and a `.env` file for the API token. It also sets up logging to capture important events and errors.
+
+### Define `push_policy` Function
+
+This function handles the individual policy push operations. It takes the `APIClient` instance, policy name, and target name as arguments, and sends a request to the Check Point Management server to push the specified policy to the specified target. It returns a dictionary containing the result of the operation.
+
+### Define `create_html_report` Function
+
+This function generates an HTML report based on the results of the policy push operations. It uses the Jinja2 library to render an HTML template with the provided data.
+
+### Define `send_email` Function
+
+This function handles sending the HTML report via email. It sets up an SMTP connection, composes an email with the HTML report as the body, and sends the email.
+
+### Define `main` Function
+
+The `main` function orchestrates the entire process. It performs the following steps:
+
+1. Creates an `APIClient` instance.
+2. Authenticates to the Check Point Management server.
+3. Retrieves the list of policies.
+4. Initiates concurrent policy push operations using a `ThreadPoolExecutor`. The script is configured to perform a maximum of 5 concurrent policy pushes to prevent overwhelming the server, with a delay of 2 seconds between each push. This is achieved by setting the `max_workers` parameter of `ThreadPoolExecutor` to 5.
+5. Collects the results of the policy push operations.
+6. Generates an HTML report based on the results.
+7. Sends the report via email.
+8. Logs out of the Check Point Management server.
+
+Here's the relevant code snippet from the `main.py` script that configures the concurrency:
 
 ```python
-import json
-import logging
-import os
-from cp_mgmt_api_sdk_py import APIClient
-import dotenv
-from jinja2 import Environment, FileSystemLoader
-import smtplib
-from email.mime.multipart import MIMEMultipart
-from email.mime.text import MIMEText
-import time
-from concurrent.futures import ThreadPoolExecutor
-
-# ... rest of your script
-
-if __name__ == '__main__':
-    main()
+with ThreadPoolExecutor(max_workers=5) as executor:
+    for policy_package in show_policy_res.data['packages']:
+        policy_name = policy_package['name']
+        if policy_name not in exception_list:
+            for target in policy_package['targets']:
+                target_name = target['name']
+                future = executor.submit(push_policy, client, policy_name, target_name)
+                policy_push_futures.append(future)
 ```
 
-#### Key Functions
+In this code snippet, `ThreadPoolExecutor` is utilized with `max_workers` set to 5, which limits the script to a maximum of 5 concurrent policy push operations.
 
-- **`push_policy(client, policy_name, target_name)`**:
-  - Handles pushing a policy to a specified target, with a 2-second delay.
-- **`create_html_report(data)`**:
-  - Generates an HTML report using the Jinja2 template.
-- **`send_email(html_file_path)`**:
-  - Sends the HTML report via email.
+### Script Execution
 
-#### Main Function
+The script execution begins from the standard `if __name__ == '__main__':` block which calls the `main` function.
 
-The `main()` function performs the following steps:
+### Error Handling
 
-1. Loads environment variables and configuration from files.
-2. Sets up logging.
-3. Initializes the Check Point API client and logs in using the API token.
-4. Retrieves the list of policy packages.
-5. Creates a thread pool to process policy pushes concurrently.
-6. Collects the results of each policy push.
-7. Generates an HTML report of the push results.
-8. Sends the HTML report via email.
-9. Logs out of the Check Point API.
+Throughout the script, appropriate error handling is included to catch and log errors, ensuring that the script can fail gracefully in case of unexpected issues.
 
-### Running the Script
+## Makefile
+
+A `Makefile` is provided to automate the setup of a virtual environment, installation of dependencies, and running the script.
+
+```make
+# Makefile
+
+VENV_NAME?= .venv
+VENV_ACTIVATE=. $(VENV_NAME)/bin/activate
+PYTHON=${VENV_NAME}/bin/python3
+
+# Targets
+
+all: venv
+
+venv: $(VENV_NAME)/bin/activate  # Create virtual environment
+$(VENV_NAME)/bin/activate: requirements.txt
+	test -d $(VENV_NAME) || virtualenv -p python3 $(VENV_NAME)
+	${PYTHON} -m pip install -U pip
+	${PYTHON} -m pip install -r requirements.txt
+	touch $(VENV_NAME)/bin/activate
+
+run:  # Run the script
+	${VENV_ACTIVATE} && ${PYTHON} main.py
+
+clean:  # Clean up the virtual environment
+	rm -rf $(VENV_NAME)
+
+.PHONY: all venv run clean
+```
+
+## Usage
 
 1. Ensure that all configuration files are properly set up and placed in the correct directories.
-2. Run the `main.py` script:
+2. Run `make` in the terminal to set up the virtual environment in the `.venv` directory and install dependencies.
+3. Run `make run` to execute your `main.py` script.
+4. (Optional) Run `make clean` to delete the virtual environment and clean up the project directory.
 
-```bash
-python main.py
+## .gitignore
+
+Create a `.gitignore` file to exclude unnecessary files from your git repository:
+
+```gitignore
+# Python
+*.pyc
+*.pyo
+*.pyd
+__pycache__/
+
+# Virtual Environment
+.venv/
+
+# Logs
+logs/
+
+# HTML report
+report.html
+
+# Miscellaneous
+*.swp
+.DS_Store
 ```
-
-The script will process the policy pushes, generate the report, and send it via email.
 
 --- 
 
-This Markdown documentation provides a detailed overview of your script and its setup. It should help anyone understand how to use and modify the script as needed.
+This should preserve the markdown formatting when copied.
