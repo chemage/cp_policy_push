@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        .success { color: green; }
+        .failure { color: red; }
+    </style>
+    <title>Policy Push Report</title>
+</head>
+<body>
+<table>
+    <tr>
+        <th>Policy Name</th>
+        <th>Target Name</th>
+        <th>Push Successful</th>
+        <th>Error Message</th>
+    </tr>
+    {% for result in data.policy_push_results %}
+    <tr class="{{ 'success' if result.success else 'failure' }}">
+        <td>{{ result.policy_name }}</td>
+        <td>{{ result.target_name }}</td>
+        <td>{{ result.success }}</td>
+        <td>{{ result.error_message }}</td>
+    </tr>
+    {% endfor %}
+</table>
+</body>
+</html>

@@ -1,0 +1,18 @@
+{
+    "checkpoint": {
+        "server_address": "your-server-address",
+        "exception_list": ["Exception1", "Exception2"]
+    },
+    "logging": {
+        "log_dir": "./logs",
+        "log_level": "INFO"
+    },
+    "email": {
+        "sender_address": "your-email@example.com",
+        "receiver_address": "recipient@example.com",
+        "smtp_server": "smtp.example.com",
+        "smtp_port": 587,
+        "smtp_username": "your-email@example.com",
+        "smtp_password": "your-email-password"
+    }
+}

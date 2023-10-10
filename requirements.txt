@@ -1,0 +1,5 @@
+# requirements.txt
+cp-mgmt-api-sdk
+python-dotenv
+Jinja2
+smtplib
