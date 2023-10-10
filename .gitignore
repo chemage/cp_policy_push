@@ -1,0 +1,18 @@
+# Python
+*.pyc
+*.pyo
+*.pyd
+__pycache__/
+
+# Virtual Environment
+.venv/
+
+# Logs
+logs/
+
+# HTML report
+report.html
+
+# Miscellaneous
+*.swp
+.DS_Store
